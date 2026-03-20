@@ -183,6 +183,24 @@
             background: #E5E7EB;
         }
         
+        .color-system-btn {
+            background: #F3F4F6;
+            color: #6B7280;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s ease;
+        }
+        
+        .color-system-btn:hover {
+            background: #E5E7EB;
+            color: #4B5563;
+        }
+        
+        .color-system-btn.active {
+            background: #3B82F6;
+            color: white;
+            border-color: #3B82F6;
+        }
+        
         input[type="range"] {
             -webkit-appearance: none;
             height: 4px;
@@ -337,15 +355,62 @@
                     </div>
                 </div>
                 
-                <!-- 潘通匹配 -->
+                <!-- 配色体系匹配 -->
                 <div class="bg-white rounded-2xl p-6 md:p-8 ceramic-shadow">
-                    <h2 class="text-lg font-medium text-gray-800 mb-6">最接近的潘通色</h2>
+                    <!-- 配色体系切换 -->
+                    <div class="mb-6">
+                        <h2 class="text-lg font-medium text-gray-800 mb-4">配色体系匹配</h2>
+                        <div class="flex gap-2 overflow-x-auto pb-2">
+                            <button class="color-system-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-system="pantone">潘通</button>
+                            <button class="color-system-btn px-4 py-2 rounded-lg text-sm font-medium transition-all" data-system="ral">RAL</button>
+                            <button class="color-system-btn px-4 py-2 rounded-lg text-sm font-medium transition-all" data-system="ncs">NCS</button>
+                            <button class="color-system-btn px-4 py-2 rounded-lg text-sm font-medium transition-all" data-system="japanese">日本色研</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 潘通匹配 -->
                     <div id="pantone-match" class="space-y-4">
                         <div class="flex items-center gap-4">
                             <div id="pantone-color" class="pantone-swatch w-20 h-20 ceramic-shadow" style="background-color: #FFFFFF;"></div>
                             <div>
                                 <div id="pantone-number" class="text-lg font-medium text-gray-800">Pantone 100 C</div>
                                 <div id="pantone-name" class="text-sm text-gray-600">Bright Yellow</div>
+                                <div class="text-xs text-gray-500 mt-1">点击色块复制色号</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- RAL匹配 -->
+                    <div id="ral-match" class="space-y-4 hidden">
+                        <div class="flex items-center gap-4">
+                            <div id="ral-color" class="pantone-swatch w-20 h-20 ceramic-shadow" style="background-color: #FFFFFF;"></div>
+                            <div>
+                                <div id="ral-number" class="text-lg font-medium text-gray-800">RAL 1000</div>
+                                <div id="ral-name" class="text-sm text-gray-600">Green beige</div>
+                                <div class="text-xs text-gray-500 mt-1">点击色块复制色号</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- NCS匹配 -->
+                    <div id="ncs-match" class="space-y-4 hidden">
+                        <div class="flex items-center gap-4">
+                            <div id="ncs-color" class="pantone-swatch w-20 h-20 ceramic-shadow" style="background-color: #FFFFFF;"></div>
+                            <div>
+                                <div id="ncs-number" class="text-lg font-medium text-gray-800">NCS S 0500-Y</div>
+                                <div id="ncs-name" class="text-sm text-gray-600">Pure yellow</div>
+                                <div class="text-xs text-gray-500 mt-1">点击色块复制色号</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 日本色研匹配 -->
+                    <div id="japanese-match" class="space-y-4 hidden">
+                        <div class="flex items-center gap-4">
+                            <div id="japanese-color" class="pantone-swatch w-20 h-20 ceramic-shadow" style="background-color: #FFFFFF;"></div>
+                            <div>
+                                <div id="japanese-number" class="text-lg font-medium text-gray-800">桜色</div>
+                                <div id="japanese-name" class="text-sm text-gray-600">Sakura</div>
                                 <div class="text-xs text-gray-500 mt-1">点击色块复制色号</div>
                             </div>
                         </div>
@@ -576,6 +641,434 @@
             { number: "Pantone 300 C", name: "Orange C", rgb: [255, 165, 0] }
         ];
 
+        // RAL颜色数据库
+        const ralColors = [
+            { number: "RAL 1000", name: "Green beige", rgb: [214, 199, 148] },
+            { number: "RAL 1001", name: "Beige", rgb: [204, 176, 137] },
+            { number: "RAL 1002", name: "Sand yellow", rgb: [205, 169, 116] },
+            { number: "RAL 1003", name: "Signal yellow", rgb: [244, 168, 47] },
+            { number: "RAL 1004", name: "Golden yellow", rgb: [222, 156, 31] },
+            { number: "RAL 1005", name: "Honey yellow", rgb: [205, 130, 0] },
+            { number: "RAL 1006", name: "Maize yellow", rgb: [207, 127, 0] },
+            { number: "RAL 1007", name: "Daffodil yellow", rgb: [255, 200, 0] },
+            { number: "RAL 1011", name: "Brown beige", rgb: [180, 145, 107] },
+            { number: "RAL 1012", name: "Lemon yellow", rgb: [255, 250, 100] },
+            { number: "RAL 1013", name: "Oyster white", rgb: [235, 230, 210] },
+            { number: "RAL 1014", name: "Ivory", rgb: [250, 240, 220] },
+            { number: "RAL 1015", name: "Light ivory", rgb: [255, 250, 240] },
+            { number: "RAL 1016", name: "Sulfur yellow", rgb: [240, 230, 0] },
+            { number: "RAL 1017", name: "Saffron yellow", rgb: [255, 185, 0] },
+            { number: "RAL 1018", name: "Zinc yellow", rgb: [230, 210, 0] },
+            { number: "RAL 1019", name: "Grey beige", rgb: [195, 185, 165] },
+            { number: "RAL 1020", name: "Ochre yellow", rgb: [200, 120, 0] },
+            { number: "RAL 1021", name: "Broom yellow", rgb: [220, 160, 0] },
+            { number: "RAL 1022", name: "Dahlia yellow", rgb: [255, 195, 0] },
+            { number: "RAL 1023", name: "Pastel yellow", rgb: [255, 245, 180] },
+            { number: "RAL 1024", name: "Pearl beige", rgb: [230, 215, 180] },
+            { number: "RAL 1025", name: "Pearl gold", rgb: [220, 180, 100] },
+            { number: "RAL 1026", name: "Sun yellow", rgb: [255, 200, 0] },
+            { number: "RAL 2000", name: "Yellow orange", rgb: [255, 130, 0] },
+            { number: "RAL 2001", name: "Red orange", rgb: [255, 80, 0] },
+            { number: "RAL 2002", name: "Vermilion", rgb: [255, 60, 0] },
+            { number: "RAL 2003", name: "Paste red", rgb: [200, 60, 0] },
+            { number: "RAL 2004", name: "Orange red", rgb: [255, 100, 0] },
+            { number: "RAL 2005", name: "Traffic red", rgb: [255, 0, 0] },
+            { number: "RAL 2006", name: "Signal red", rgb: [255, 20, 0] },
+            { number: "RAL 2007", name: "Carmine red", rgb: [200, 0, 0] },
+            { number: "RAL 2008", name: "Berry red", rgb: [180, 20, 20] },
+            { number: "RAL 2009", name: "Oxide red", rgb: [150, 40, 20] },
+            { number: "RAL 2010", name: "Brown red", rgb: [120, 40, 20] },
+            { number: "RAL 2011", name: "Bordeaux", rgb: [100, 20, 20] },
+            { number: "RAL 2012", name: "Salmon orange", rgb: [255, 150, 120] },
+            { number: "RAL 2013", name: "Pearl orange", rgb: [255, 160, 80] },
+            { number: "RAL 2014", name: "Pearl red", rgb: [255, 80, 80] },
+            { number: "RAL 2015", name: "Ruby red", rgb: [200, 20, 80] },
+            { number: "RAL 2016", name: "Purple red", rgb: [150, 20, 80] },
+            { number: "RAL 2017", name: "Yellow red", rgb: [255, 100, 0] },
+            { number: "RAL 2018", name: "Flame red", rgb: [255, 40, 0] },
+            { number: "RAL 2019", name: "Terracotta", rgb: [200, 80, 40] },
+            { number: "RAL 2020", name: "Pearl copper", rgb: [200, 100, 60] },
+            { number: "RAL 3000", name: "Fire red", rgb: [255, 20, 0] },
+            { number: "RAL 3001", name: "Signal red", rgb: [255, 0, 0] },
+            { number: "RAL 3002", name: "Carmine red", rgb: [200, 0, 0] },
+            { number: "RAL 3003", name: "Ruby red", rgb: [150, 0, 0] },
+            { number: "RAL 3004", name: "Purple red", rgb: [120, 0, 60] },
+            { number: "RAL 3005", name: "Wine red", rgb: [100, 0, 40] },
+            { number: "RAL 3006", name: "Black red", rgb: [80, 0, 20] },
+            { number: "RAL 3007", name: "Oxide brown", rgb: [100, 40, 20] },
+            { number: "RAL 3008", name: "Brown red", rgb: [120, 60, 40] },
+            { number: "RAL 3009", name: "Beige red", rgb: [160, 80, 60] },
+            { number: "RAL 3010", name: "Tomato red", rgb: [255, 80, 40] },
+            { number: "RAL 3011", name: "Antique pink", rgb: [255, 180, 180] },
+            { number: "RAL 3012", name: "Light pink", rgb: [255, 200, 200] },
+            { number: "RAL 3013", name: "Coral red", rgb: [255, 120, 80] },
+            { number: "RAL 3014", name: "Rose", rgb: [255, 100, 140] },
+            { number: "RAL 3015", name: "Strawberry red", rgb: [255, 40, 80] },
+            { number: "RAL 3016", name: "Salmon pink", rgb: [255, 160, 140] },
+            { number: "RAL 3017", name: "Pearl pink", rgb: [255, 180, 200] },
+            { number: "RAL 3018", name: "Bordeaux", rgb: [120, 20, 40] },
+            { number: "RAL 3019", name: "Claret", rgb: [100, 20, 40] },
+            { number: "RAL 3020", name: "Fuchsia red", rgb: [200, 40, 120] },
+            { number: "RAL 3022", name: "Red lilac", rgb: [180, 80, 120] },
+            { number: "RAL 3024", name: "Pearl carmine", rgb: [200, 40, 60] },
+            { number: "RAL 3026", name: "Pearl ruby red", rgb: [180, 20, 60] },
+            { number: "RAL 3027", name: "Red plum", rgb: [150, 40, 80] },
+            { number: "RAL 3028", name: "Blackberry", rgb: [80, 20, 40] },
+            { number: "RAL 4001", name: "Red lilac", rgb: [180, 80, 120] },
+            { number: "RAL 4002", name: "Red violet", rgb: [160, 40, 120] },
+            { number: "RAL 4003", name: "Heather violet", rgb: [140, 80, 120] },
+            { number: "RAL 4004", name: "Claret violet", rgb: [120, 40, 80] },
+            { number: "RAL 4005", name: "Blue lilac", rgb: [160, 120, 160] },
+            { number: "RAL 4006", name: "Traffic purple", rgb: [120, 40, 120] },
+            { number: "RAL 4007", name: "Purple violet", rgb: [100, 40, 100] },
+            { number: "RAL 4008", name: "Signal violet", rgb: [80, 40, 120] },
+            { number: "RAL 4009", name: "Pastel violet", rgb: [200, 160, 200] },
+            { number: "RAL 4010", name: "Telemagenta", rgb: [200, 40, 160] },
+            { number: "RAL 4011", name: "Pearl violet", rgb: [160, 80, 160] },
+            { number: "RAL 4012", name: "Pearl blackberry", rgb: [120, 40, 100] },
+            { number: "RAL 5000", name: "Violet blue", rgb: [40, 40, 120] },
+            { number: "RAL 5001", name: "Green blue", rgb: [0, 80, 120] },
+            { number: "RAL 5002", name: "Ultramarine blue", rgb: [0, 40, 120] },
+            { number: "RAL 5003", name: "Sapphire blue", rgb: [0, 60, 160] },
+            { number: "RAL 5004", name: "Black blue", rgb: [20, 20, 60] },
+            { number: "RAL 5005", name: "Signal blue", rgb: [0, 80, 200] },
+            { number: "RAL 5006", name: "Azure blue", rgb: [0, 120, 200] },
+            { number: "RAL 5007", name: "Gentian blue", rgb: [40, 80, 200] },
+            { number: "RAL 5008", name: "Steel blue", rgb: [80, 120, 160] },
+            { number: "RAL 5009", name: "Light blue", rgb: [120, 160, 200] },
+            { number: "RAL 5010", name: "Cobalt blue", rgb: [0, 80, 160] },
+            { number: "RAL 5011", name: "Prussian blue", rgb: [0, 40, 80] },
+            { number: "RAL 5012", name: "Reseda blue", rgb: [80, 120, 120] },
+            { number: "RAL 5013", name: "Dove blue", rgb: [160, 180, 200] },
+            { number: "RAL 5014", name: "Night blue", rgb: [20, 40, 80] },
+            { number: "RAL 5015", name: "Midnight blue", rgb: [0, 20, 60] },
+            { number: "RAL 5016", name: "Blue grey", rgb: [100, 120, 140] },
+            { number: "RAL 5017", name: "Olive blue", rgb: [60, 80, 80] },
+            { number: "RAL 5018", name: "Slate blue", rgb: [80, 100, 120] },
+            { number: "RAL 5019", name: "Stone blue", rgb: [120, 140, 160] },
+            { number: "RAL 5020", name: "Grey blue", rgb: [140, 160, 180] },
+            { number: "RAL 5021", name: "Blue green", rgb: [0, 120, 120] },
+            { number: "RAL 5022", name: "Turquoise blue", rgb: [0, 160, 160] },
+            { number: "RAL 5023", name: "Capri blue", rgb: [0, 160, 200] },
+            { number: "RAL 5024", name: "Ocean blue", rgb: [0, 120, 160] },
+            { number: "RAL 5025", name: "Water blue", rgb: [80, 160, 200] },
+            { number: "RAL 5026", name: "Sky blue", rgb: [120, 180, 220] },
+            { number: "RAL 5027", name: "Pearl gentian blue", rgb: [40, 100, 200] },
+            { number: "RAL 5028", name: "Pearl night blue", rgb: [20, 60, 120] },
+            { number: "RAL 6000", name: "Patina green", rgb: [80, 120, 80] },
+            { number: "RAL 6001", name: "Emerald green", rgb: [0, 120, 0] },
+            { number: "RAL 6002", name: "Leaf green", rgb: [80, 160, 80] },
+            { number: "RAL 6003", name: "Olive green", rgb: [80, 120, 0] },
+            { number: "RAL 6004", name: "Blue green", rgb: [0, 120, 120] },
+            { number: "RAL 6005", name: "Moss green", rgb: [100, 120, 80] },
+            { number: "RAL 6006", name: "Brown green", rgb: [120, 120, 60] },
+            { number: "RAL 6007", name: "Fir green", rgb: [40, 80, 40] },
+            { number: "RAL 6008", name: "Grass green", rgb: [80, 160, 40] },
+            { number: "RAL 6009", name: "Reseda green", rgb: [120, 160, 120] },
+            { number: "RAL 6010", name: "Black green", rgb: [40, 60, 40] },
+            { number: "RAL 6011", name: "Reed green", rgb: [80, 120, 80] },
+            { number: "RAL 6012", name: "Yellow olive", rgb: [160, 160, 80] },
+            { number: "RAL 6013", name: "Black olive", rgb: [80, 80, 40] },
+            { number: "RAL 6014", name: "Turquoise green", rgb: [80, 160, 160] },
+            { number: "RAL 6015", name: "May green", rgb: [80, 160, 80] },
+            { number: "RAL 6016", name: "Yellow green", rgb: [160, 200, 80] },
+            { number: "RAL 6017", name: "Yellow green", rgb: [120, 160, 40] },
+            { number: "RAL 6018", name: "Pine green", rgb: [40, 80, 40] },
+            { number: "RAL 6019", name: "Mint green", rgb: [120, 200, 160] },
+            { number: "RAL 6020", name: "Bottle green", rgb: [20, 80, 20] },
+            { number: "RAL 6021", name: "Teal green", rgb: [0, 120, 120] },
+            { number: "RAL 6022", name: "Emerald green", rgb: [0, 160, 80] },
+            { number: "RAL 6023", name: "Salvia green", rgb: [100, 160, 120] },
+            { number: "RAL 6024", name: "Acid green", rgb: [120, 200, 40] },
+            { number: "RAL 6025", name: "Guacamole", rgb: [160, 200, 120] },
+            { number: "RAL 6026", name: "Asparagus green", rgb: [120, 160, 80] },
+            { number: "RAL 6027", name: "Pearl green", rgb: [120, 200, 160] },
+            { number: "RAL 6028", name: "Pearl opal green", rgb: [160, 200, 180] },
+            { number: "RAL 7000", name: "Squirrel grey", rgb: [120, 120, 120] },
+            { number: "RAL 7001", name: "Silver grey", rgb: [160, 160, 160] },
+            { number: "RAL 7002", name: "Olive grey", rgb: [100, 100, 80] },
+            { number: "RAL 7003", name: "Moss grey", rgb: [100, 120, 100] },
+            { number: "RAL 7004", name: "Signal grey", rgb: [80, 80, 80] },
+            { number: "RAL 7005", name: "Mouse grey", rgb: [120, 120, 120] },
+            { number: "RAL 7006", name: "Beige grey", rgb: [160, 160, 140] },
+            { number: "RAL 7007", name: "Khaki grey", rgb: [140, 140, 120] },
+            { number: "RAL 7008", name: "Green grey", rgb: [100, 120, 100] },
+            { number: "RAL 7009", name: "Tarpaulin grey", rgb: [100, 100, 100] },
+            { number: "RAL 7010", name: "Iron grey", rgb: [80, 80, 80] },
+            { number: "RAL 7011", name: "Basalt grey", rgb: [60, 60, 60] },
+            { number: "RAL 7012", name: "Brown grey", rgb: [100, 80, 80] },
+            { number: "RAL 7013", name: "Slate grey", rgb: [80, 80, 80] },
+            { number: "RAL 7015", name: "Ebony", rgb: [40, 40, 40] },
+            { number: "RAL 7016", name: "Graphite black", rgb: [20, 20, 20] },
+            { number: "RAL 7017", name: "Granite grey", rgb: [100, 100, 100] },
+            { number: "RAL 7018", name: "Concrete grey", rgb: [120, 120, 120] },
+            { number: "RAL 7019", name: "Basalt", rgb: [40, 40, 40] },
+            { number: "RAL 7020", name: "Grey", rgb: [160, 160, 160] },
+            { number: "RAL 7021", name: "Grey black", rgb: [80, 80, 80] },
+            { number: "RAL 7022", name: "Umbra grey", rgb: [100, 80, 80] },
+            { number: "RAL 7023", name: "Pebble grey", rgb: [140, 140, 140] },
+            { number: "RAL 7024", name: "Dove grey", rgb: [160, 160, 160] },
+            { number: "RAL 7026", name: "Anthracite", rgb: [40, 40, 40] },
+            { number: "RAL 7030", name: "Stone grey", rgb: [160, 160, 160] },
+            { number: "RAL 7031", name: "Blue grey", rgb: [120, 140, 160] },
+            { number: "RAL 7032", name: "Pebble grey", rgb: [140, 140, 140] },
+            { number: "RAL 7033", name: "Cement grey", rgb: [120, 120, 120] },
+            { number: "RAL 7034", name: "Yellow grey", rgb: [160, 160, 140] },
+            { number: "RAL 7035", name: "Light grey", rgb: [200, 200, 200] },
+            { number: "RAL 7036", name: "Platinum grey", rgb: [180, 180, 180] },
+            { number: "RAL 7037", name: "Dusty grey", rgb: [160, 160, 160] },
+            { number: "RAL 7038", name: "Agate grey", rgb: [140, 140, 140] },
+            { number: "RAL 7039", name: "Quartz grey", rgb: [180, 180, 180] },
+            { number: "RAL 7040", name: "Window grey", rgb: [160, 160, 160] },
+            { number: "RAL 7042", name: "Traffic grey A", rgb: [100, 100, 100] },
+            { number: "RAL 7043", name: "Traffic grey B", rgb: [60, 60, 60] },
+            { number: "RAL 7044", name: "Silk grey", rgb: [200, 200, 200] },
+            { number: "RAL 7045", name: "Telegrey 1", rgb: [160, 160, 160] },
+            { number: "RAL 7046", name: "Telegrey 2", rgb: [120, 120, 120] },
+            { number: "RAL 7047", name: "Telegrey 3", rgb: [80, 80, 80] },
+            { number: "RAL 7048", name: "Telegrey 4", rgb: [40, 40, 40] },
+            { number: "RAL 7049", name: "Pearl light grey", rgb: [200, 200, 200] },
+            { number: "RAL 7050", name: "Pearl dark grey", rgb: [120, 120, 120] },
+            { number: "RAL 8000", name: "Green brown", rgb: [120, 120, 80] },
+            { number: "RAL 8001", name: "Ochre brown", rgb: [160, 120, 60] },
+            { number: "RAL 8002", name: "Signal brown", rgb: [160, 120, 80] },
+            { number: "RAL 8003", name: "Clay brown", rgb: [160, 100, 60] },
+            { number: "RAL 8004", name: "Copper brown", rgb: [160, 100, 40] },
+            { number: "RAL 8005", name: "Fawn brown", rgb: [160, 120, 80] },
+            { number: "RAL 8006", name: "Olive brown", rgb: [120, 100, 40] },
+            { number: "RAL 8007", name: "Nut brown", rgb: [100, 60, 40] },
+            { number: "RAL 8008", name: "Red brown", rgb: [160, 80, 40] },
+            { number: "RAL 8009", name: "Sepia brown", rgb: [120, 80, 40] },
+            { number: "RAL 8010", name: "Chestnut brown", rgb: [120, 60, 40] },
+            { number: "RAL 8011", name: "Mahogany", rgb: [100, 40, 20] },
+            { number: "RAL 8012", name: "Chocolate", rgb: [80, 40, 20] },
+            { number: "RAL 8013", name: "Grey brown", rgb: [100, 80, 60] },
+            { number: "RAL 8014", name: "Black brown", rgb: [80, 40, 20] },
+            { number: "RAL 8015", name: "Orange brown", rgb: [160, 100, 40] },
+            { number: "RAL 8016", name: "Beige brown", rgb: [180, 140, 100] },
+            { number: "RAL 8017", name: "Pale brown", rgb: [180, 160, 120] },
+            { number: "RAL 8018", name: "Terra brown", rgb: [160, 120, 80] },
+            { number: "RAL 8019", name: "Cinnamon", rgb: [120, 60, 20] },
+            { number: "RAL 8020", name: "Copper", rgb: [200, 120, 60] },
+            { number: "RAL 8021", name: "Bronze", rgb: [160, 100, 60] },
+            { number: "RAL 8022", name: "Brown", rgb: [120, 80, 40] },
+            { number: "RAL 8023", name: "Pearl copper", rgb: [200, 120, 60] },
+            { number: "RAL 8024", name: "Pearl bronze", rgb: [160, 100, 60] },
+            { number: "RAL 8025", name: "Pearl brown", rgb: [120, 80, 40] },
+            { number: "RAL 8026", name: "Pearl copper", rgb: [180, 100, 40] },
+            { number: "RAL 8027", name: "Pearl bronze", rgb: [140, 80, 40] },
+            { number: "RAL 8028", name: "Pearl brown", rgb: [100, 60, 20] },
+            { number: "RAL 9001", name: "Cream", rgb: [250, 240, 220] },
+            { number: "RAL 9002", name: "Grey white", rgb: [220, 220, 220] },
+            { number: "RAL 9003", name: "Signal white", rgb: [255, 255, 255] },
+            { number: "RAL 9004", name: "Signal black", rgb: [0, 0, 0] },
+            { number: "RAL 9005", name: "Jet black", rgb: [20, 20, 20] },
+            { number: "RAL 9006", name: "White aluminum", rgb: [220, 220, 220] },
+            { number: "RAL 9007", name: "Grey aluminum", rgb: [160, 160, 160] },
+            { number: "RAL 9010", name: "Pure white", rgb: [255, 255, 255] },
+            { number: "RAL 9011", name: "Graphite black", rgb: [40, 40, 40] },
+            { number: "RAL 9012", name: "Cleanroom white", rgb: [255, 255, 255] },
+            { number: "RAL 9013", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9014", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9016", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9017", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9018", name: "Papyrus white", rgb: [240, 230, 210] },
+            { number: "RAL 9019", name: "Shell white", rgb: [250, 240, 220] },
+            { number: "RAL 9020", name: "Green white", rgb: [240, 240, 220] },
+            { number: "RAL 9021", name: "Grey white", rgb: [220, 220, 220] },
+            { number: "RAL 9022", name: "Brown white", rgb: [240, 220, 200] },
+            { number: "RAL 9023", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9024", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9025", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9026", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9027", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9028", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9029", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9030", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9031", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9032", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9033", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9034", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9035", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9036", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9037", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9038", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9039", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9040", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9041", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9042", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9043", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9044", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9045", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9046", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9047", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9048", name: "Traffic black", rgb: [40, 40, 40] },
+            { number: "RAL 9049", name: "Traffic white", rgb: [240, 240, 240] },
+            { number: "RAL 9050", name: "Traffic black", rgb: [40, 40, 40] }
+        ];
+
+        // NCS颜色数据库
+        const ncsColors = [
+            { number: "NCS S 0500-Y", name: "Pure yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 1000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 1500-Y", name: "Light yellow", rgb: [255, 255, 100] },
+            { number: "NCS S 2000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 2500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 3000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 3500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 4000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 4500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 5000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 5500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 6000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 6500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 7000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 7500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 8000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 8500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 9000-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 9500-Y", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "NCS S 0500-R", name: "Pure red", rgb: [255, 0, 0] },
+            { number: "NCS S 1000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 1500-R", name: "Light red", rgb: [255, 100, 100] },
+            { number: "NCS S 2000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 2500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 3000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 3500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 4000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 4500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 5000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 5500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 6000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 6500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 7000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 7500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 8000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 8500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 9000-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 9500-R", name: "Red", rgb: [255, 0, 0] },
+            { number: "NCS S 0500-B", name: "Pure blue", rgb: [0, 0, 255] },
+            { number: "NCS S 1000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 1500-B", name: "Light blue", rgb: [100, 100, 255] },
+            { number: "NCS S 2000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 2500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 3000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 3500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 4000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 4500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 5000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 5500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 6000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 6500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 7000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 7500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 8000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 8500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 9000-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 9500-B", name: "Blue", rgb: [0, 0, 255] },
+            { number: "NCS S 0500-G", name: "Pure green", rgb: [0, 255, 0] },
+            { number: "NCS S 1000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 1500-G", name: "Light green", rgb: [100, 255, 100] },
+            { number: "NCS S 2000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 2500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 3000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 3500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 4000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 4500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 5000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 5500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 6000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 6500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 7000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 7500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 8000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 8500-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 9000-G", name: "Green", rgb: [0, 255, 0] },
+            { number: "NCS S 9500-G", name: "Green", rgb: [0, 255, 0] }
+        ];
+
+        // 日本色研配色体系
+        const japaneseColors = [
+            { number: "桜色", name: "Sakura", rgb: [254, 223, 225] },
+            { number: "桃色", name: "Momo", rgb: [255, 182, 193] },
+            { number: "珊瑚色", name: "Sango", rgb: [255, 127, 80] },
+            { number: "薔薇色", name: "Bara", rgb: [255, 105, 180] },
+            { number: "葡萄色", name: "Budou", rgb: [128, 0, 128] },
+            { number: "藤色", name: "Fuji", rgb: [186, 85, 211] },
+            { number: "瑠璃色", name: "Ruri", rgb: [0, 191, 255] },
+            { number: "水色", name: "Mizuiro", rgb: [173, 216, 230] },
+            { number: "空色", name: "Sora", rgb: [135, 206, 235] },
+            { number: "碧色", name: "Midori", rgb: [0, 255, 255] },
+            { number: "緑色", name: "Midori", rgb: [0, 128, 0] },
+            { number: "若草色", name: "Wakakusa", rgb: [152, 251, 152] },
+            { number: "柳色", name: "Yanagi", rgb: [144, 238, 144] },
+            { number: "黄色", name: "Kiiro", rgb: [255, 255, 0] },
+            { number: "金色", name: "Kinpaku", rgb: [255, 215, 0] },
+            { number: "橙色", name: "Daidai", rgb: [255, 165, 0] },
+            { number: "赤色", name: "Aka", rgb: [255, 0, 0] },
+            { number: "紅色", name: "Beni", rgb: [255, 0, 0] },
+            { number: "紫色", name: "Murasaki", rgb: [128, 0, 128] },
+            { number: "青色", name: "Ao", rgb: [0, 0, 255] },
+            { number: "藍色", name: "Ai", rgb: [0, 0, 139] },
+            { number: "緑色", name: "Ryokushoku", rgb: [0, 255, 0] },
+            { number: "茶色", name: "Chairo", rgb: [165, 42, 42] },
+            { number: "白色", name: "Shiro", rgb: [255, 255, 255] },
+            { number: "灰色", name: "Gurē", rgb: [128, 128, 128] },
+            { number: "黒色", name: "Kuro", rgb: [0, 0, 0] },
+            { number: "瑠璃色", name: "Ruri-iro", rgb: [0, 191, 255] },
+            { number: "琥珀色", name: "Kohaku", rgb: [255, 191, 0] },
+            { number: "翡翠色", name: "Hisui", rgb: [0, 206, 209] },
+            { number: "瑪瑙色", name: "Menō", rgb: [139, 69, 19] },
+            { number: "珍珠色", name: "Shinju", rgb: [255, 255, 224] },
+            { number: "銀色", name: "Ginpaku", rgb: [192, 192, 192] },
+            { number: "金色", name: "Kinpaku", rgb: [255, 215, 0] },
+            { number: "珊瑚色", name: "Sango-iro", rgb: [255, 127, 80] },
+            { number: "藤色", name: "Fuji-iro", rgb: [186, 85, 211] },
+            { number: "水色", name: "Mizuiro", rgb: [173, 216, 230] },
+            { number: "空色", name: "Sora-iro", rgb: [135, 206, 235] },
+            { number: "碧色", name: "Midori-iro", rgb: [0, 255, 255] },
+            { number: "若草色", name: "Wakakusa-iro", rgb: [152, 251, 152] },
+            { number: "柳色", name: "Yanagi-iro", rgb: [144, 238, 144] },
+            { number: "黄色", name: "Kiiro", rgb: [255, 255, 0] },
+            { number: "橙色", name: "Daidai-iro", rgb: [255, 165, 0] },
+            { number: "赤色", name: "Aka-iro", rgb: [255, 0, 0] },
+            { number: "紅色", name: "Beni-iro", rgb: [255, 0, 0] },
+            { number: "紫色", name: "Murasaki-iro", rgb: [128, 0, 128] },
+            { number: "青色", name: "Ao-iro", rgb: [0, 0, 255] },
+            { number: "藍色", name: "Ai-iro", rgb: [0, 0, 139] },
+            { number: "緑色", name: "Ryokushoku", rgb: [0, 255, 0] },
+            { number: "茶色", name: "Chairo", rgb: [165, 42, 42] },
+            { number: "白色", name: "Shiro-iro", rgb: [255, 255, 255] },
+            { number: "灰色", name: "Gurē-iro", rgb: [128, 128, 128] },
+            { number: "黒色", name: "Kuro-iro", rgb: [0, 0, 0] },
+            { number: "瑠璃色", name: "Ruri-iro", rgb: [0, 191, 255] },
+            { number: "琥珀色", name: "Kohaku-iro", rgb: [255, 191, 0] },
+            { number: "翡翠色", name: "Hisui-iro", rgb: [0, 206, 209] },
+            { number: "瑪瑙色", name: "Menō-iro", rgb: [139, 69, 19] },
+            { number: "珍珠色", name: "Shinju-iro", rgb: [255, 255, 224] },
+            { number: "銀色", name: "Ginpaku-iro", rgb: [192, 192, 192] },
+            { number: "金色", name: "Kinpaku-iro", rgb: [255, 215, 0] },
+            { number: "珊瑚色", name: "Sango-iro", rgb: [255, 127, 80] },
+            { number: "藤色", name: "Fuji-iro", rgb: [186, 85, 211] },
+            { number: "水色", name: "Mizuiro", rgb: [173, 216, 230] },
+            { number: "空色", name: "Sora-iro", rgb: [135, 206, 235] },
+            { number: "碧色", name: "Midori-iro", rgb: [0, 255, 255] },
+            { number: "若草色", name: "Wakakusa-iro", rgb: [152, 251, 152] },
+            { number: "柳色", name: "Yanagi-iro", rgb: [144, 238, 144] },
+            { number: "黄色", name: "Kiiro", rgb: [255, 255, 0] },
+            { number: "橙色", name: "Daidai-iro", rgb: [255, 165, 0] },
+            { number: "赤色", name: "Aka-iro", rgb: [255, 0, 0] },
+            { number: "紅色", name: "Beni-iro", rgb: [255, 0, 0] },
+            { number: "紫色", name: "Murasaki-iro", rgb: [128, 0, 128] },
+            { number: "青色", name: "Ao-iro", rgb: [0, 0, 255] },
+            { number: "藍色", name: "Ai-iro", rgb: [0, 0, 139] },
+            { number: "緑色", name: "Ryokushoku", rgb: [0, 255, 0] },
+            { number: "茶色", name: "Chairo", rgb: [165, 42, 42] },
+            { number: "白色", name: "Shiro-iro", rgb: [255, 255, 255] },
+            { number: "灰色", name: "Gurē-iro", rgb: [128, 128, 128] },
+            { number: "黒色", name: "Kuro-iro", rgb: [0, 0, 0] }
+        ];
+
         // DOM元素
         const rgbR = document.getElementById('rgb-r');
         const rgbG = document.getElementById('rgb-g');
@@ -669,12 +1162,30 @@
             return Math.sqrt(dr * dr + dg * dg + db * db);
         }
 
-        // 查找最接近的潘通色
-        function findClosestPantone(rgb) {
-            let closestColor = pantoneColors[0];
+        // 查找最接近的颜色
+        function findClosestColor(rgb, colorSystem) {
+            let colors;
+            switch (colorSystem) {
+                case 'pantone':
+                    colors = pantoneColors;
+                    break;
+                case 'ral':
+                    colors = ralColors;
+                    break;
+                case 'ncs':
+                    colors = ncsColors;
+                    break;
+                case 'japanese':
+                    colors = japaneseColors;
+                    break;
+                default:
+                    colors = pantoneColors;
+            }
+            
+            let closestColor = colors[0];
             let minDistance = calculateDeltaE(rgb, closestColor.rgb);
             
-            for (const color of pantoneColors) {
+            for (const color of colors) {
                 const distance = calculateDeltaE(rgb, color.rgb);
                 if (distance< minDistance) {
                     minDistance = distance;
@@ -707,11 +1218,51 @@
             // 更新HEX输入
             hexInput.value = hex;
             
-            // 查找并显示最接近的潘通色
-            const closestPantone = findClosestPantone([r, g, b]);
-            pantoneColor.style.backgroundColor = rgbToHex(closestPantone.rgb[0], closestPantone.rgb[1], closestPantone.rgb[2]);
-            pantoneNumber.textContent = closestPantone.number;
-            pantoneName.textContent = closestPantone.name;
+            // 获取当前选中的颜色体系
+            const activeSystem = document.querySelector('.color-system-btn.active').dataset.system;
+            
+            // 查找并显示最接近的颜色
+            const closestColor = findClosestColor([r, g, b], activeSystem);
+            
+            // 根据颜色体系更新显示
+            switch (activeSystem) {
+                case 'pantone':
+                    document.getElementById('pantone-match').classList.remove('hidden');
+                    document.getElementById('ral-match').classList.add('hidden');
+                    document.getElementById('ncs-match').classList.add('hidden');
+                    document.getElementById('japanese-match').classList.add('hidden');
+                    document.getElementById('pantone-color').style.backgroundColor = rgbToHex(closestColor.rgb[0], closestColor.rgb[1], closestColor.rgb[2]);
+                    document.getElementById('pantone-number').textContent = closestColor.number;
+                    document.getElementById('pantone-name').textContent = closestColor.name;
+                    break;
+                case 'ral':
+                    document.getElementById('pantone-match').classList.add('hidden');
+                    document.getElementById('ral-match').classList.remove('hidden');
+                    document.getElementById('ncs-match').classList.add('hidden');
+                    document.getElementById('japanese-match').classList.add('hidden');
+                    document.getElementById('ral-color').style.backgroundColor = rgbToHex(closestColor.rgb[0], closestColor.rgb[1], closestColor.rgb[2]);
+                    document.getElementById('ral-number').textContent = closestColor.number;
+                    document.getElementById('ral-name').textContent = closestColor.name;
+                    break;
+                case 'ncs':
+                    document.getElementById('pantone-match').classList.add('hidden');
+                    document.getElementById('ral-match').classList.add('hidden');
+                    document.getElementById('ncs-match').classList.remove('hidden');
+                    document.getElementById('japanese-match').classList.add('hidden');
+                    document.getElementById('ncs-color').style.backgroundColor = rgbToHex(closestColor.rgb[0], closestColor.rgb[1], closestColor.rgb[2]);
+                    document.getElementById('ncs-number').textContent = closestColor.number;
+                    document.getElementById('ncs-name').textContent = closestColor.name;
+                    break;
+                case 'japanese':
+                    document.getElementById('pantone-match').classList.add('hidden');
+                    document.getElementById('ral-match').classList.add('hidden');
+                    document.getElementById('ncs-match').classList.add('hidden');
+                    document.getElementById('japanese-match').classList.remove('hidden');
+                    document.getElementById('japanese-color').style.backgroundColor = rgbToHex(closestColor.rgb[0], closestColor.rgb[1], closestColor.rgb[2]);
+                    document.getElementById('japanese-number').textContent = closestColor.number;
+                    document.getElementById('japanese-name').textContent = closestColor.name;
+                    break;
+            }
         }
 
         // 事件监听器
@@ -796,6 +1347,7 @@
         });
 
         // 复制潘通色号功能
+        // 潘通色块复制功能
         pantoneColor.addEventListener('click', () => {
             const colorNumber = pantoneNumber.textContent;
             navigator.clipboard.writeText(colorNumber).then(() => {
@@ -804,6 +1356,45 @@
                 pantoneName.textContent = '已复制！';
                 setTimeout(() => {
                     pantoneName.textContent = originalText;
+                }, 1500);
+            });
+        });
+
+        // RAL色块复制功能
+        document.getElementById('ral-color').addEventListener('click', () => {
+            const colorNumber = document.getElementById('ral-number').textContent;
+            navigator.clipboard.writeText(colorNumber).then(() => {
+                // 显示复制成功提示
+                const originalText = document.getElementById('ral-name').textContent;
+                document.getElementById('ral-name').textContent = '已复制！';
+                setTimeout(() => {
+                    document.getElementById('ral-name').textContent = originalText;
+                }, 1500);
+            });
+        });
+
+        // NCS色块复制功能
+        document.getElementById('ncs-color').addEventListener('click', () => {
+            const colorNumber = document.getElementById('ncs-number').textContent;
+            navigator.clipboard.writeText(colorNumber).then(() => {
+                // 显示复制成功提示
+                const originalText = document.getElementById('ncs-name').textContent;
+                document.getElementById('ncs-name').textContent = '已复制！';
+                setTimeout(() => {
+                    document.getElementById('ncs-name').textContent = originalText;
+                }, 1500);
+            });
+        });
+
+        // 日本色研色块复制功能
+        document.getElementById('japanese-color').addEventListener('click', () => {
+            const colorNumber = document.getElementById('japanese-number').textContent;
+            navigator.clipboard.writeText(colorNumber).then(() => {
+                // 显示复制成功提示
+                const originalText = document.getElementById('japanese-name').textContent;
+                document.getElementById('japanese-name').textContent = '已复制！';
+                setTimeout(() => {
+                    document.getElementById('japanese-name').textContent = originalText;
                 }, 1500);
             });
         });
@@ -986,6 +1577,22 @@
 
         // 重置按钮点击事件
         resetBtn.addEventListener('click', resetColor);
+
+        // 颜色体系切换事件
+        const colorSystemBtns = document.querySelectorAll('.color-system-btn');
+        colorSystemBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除所有按钮的active状态
+                colorSystemBtns.forEach(b => b.classList.remove('active'));
+                // 添加当前按钮的active状态
+                btn.classList.add('active');
+                // 更新颜色显示
+                const r = parseInt(rgbR.value);
+                const g = parseInt(rgbG.value);
+                const b = parseInt(rgbB.value);
+                updateColorDisplay(r, g, b);
+            });
+        });
 
         // 初始化
         updateColorDisplay(255, 255, 255);
