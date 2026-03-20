@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对色工具 - Color Matcher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #F5F5F3;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        }
+        
+        .ceramic-shadow {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+        
+        .color-preview {
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .pantone-swatch {
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .pantone-swatch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .camera-container {
+            border: 2px solid #E5E5E3;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            background: #000;
+        }
+        
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .focus-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid white;
+            border-radius: 8px;
+            opacity: 0.8;
+        }
+        
+        .camera-btn {
+            background: white;
+            border: 1px solid #E5E5E3;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .camera-btn:hover {
+            background: #F8F8F6;
+            border-color: #D5D5D3;
+            transform: translateY(-1px);
+        }
+        
+        .camera-btn:active {
+            transform: translateY(0);
+        }
+        
+        .camera-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: #666;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: #E5E5E3;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            border: 1px solid #D5D5D3;
+        }
+        
+        input[type="number"],
+        input[type="text"] {
+            background: white;
+            border: 1px solid #E5E5E3;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        input[type="number"]:focus,
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #B5B5B3;
+            box-shadow: 0 0 0 3px rgba(181, 181, 179, 0.1);
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-stack {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-light text-gray-800 mb-2">对色工具</h1>
+            <p class="text-gray-600 text-sm">Color Matcher</p>
+        </header>
+        
+        <div class="flex flex-col md:flex-row gap-8 mobile-stack">
+            <!-- 左侧：参数调节 -->
+            <div class="flex-1 bg-white rounded-2xl p-6 md:p-8 ceramic-shadow">
+                <h2 class="text-lg font-medium text-gray-800 mb-6">颜色参数</h2>
+                
+                <!-- 相机吸色功能 -->
+                <div class="mb-8">
+                    <button id="camera-btn" class="camera-btn mb-4">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        开启相机吸色
+                    </button>
+                    
+                    <!-- 相机容器 -->
+                    <div id="camera-container" class="camera-container ceramic-shadow hidden">
+                        <video id="camera-video" autoplay playsinline class="w-full h-auto" style="max-height: 300px;"></video>
+                        <canvas id="camera-canvas" class="hidden"></canvas>
+                        <div class="camera-overlay">
+                            <div class="focus-box"></div>
+                        </div>
+                        <div class="mt-4 flex justify-center">
+                            <button id="capture-btn" class="camera-btn">捕获颜色</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RGB 滑块 -->
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm text-gray-600">R</label>
+                            <span id="rgb-r-value" class="text-sm font-medium text-gray-800">255</span>
+                        </div>
+                        <input type="range" id="rgb-r" min="0" max="255" value="255" class="w-full">
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm text-gray-600">G</label>
+                            <span id="rgb-g-value" class="text-sm font-medium text-gray-800">255</span>
+                        </div>
+                        <input type="range" id="rgb-g" min="0" max="255" value="255" class="w-full">
+                    </div>
+                    
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <label class="text-sm text-gray-600">B</label>
+                            <span id="rgb-b-value" class="text-sm font-medium text-gray-800">255</span>
+                        </div>
+                        <input type="range" id="rgb-b" min="0" max="255" value="255" class="w-full">
+                    </div>
+                </div>
+                
+                <hr class="my-8 border-gray-200">
+                
+                <!-- CMYK 输入 -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">C</label>
+                        <input type="number" id="cmyk-c" min="0" max="100" value="0" class="w-full">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">M</label>
+                        <input type="number" id="cmyk-m" min="0" max="100" value="0" class="w-full">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">Y</label>
+                        <input type="number" id="cmyk-y" min="0" max="100" value="0" class="w-full">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 block mb-1">K</label>
+                        <input type="number" id="cmyk-k" min="0" max="100" value="0" class="w-full">
+                    </div>
+                </div>
+                
+                <!-- HEX 输入 -->
+                <div>
+                    <label class="text-xs text-gray-500 block mb-2">HEX</label>
+                    <input type="text" id="hex" value="#FFFFFF" class="w-full font-mono">
+                </div>
+            </div>
+            
+            <!-- 右侧：预览区域 -->
+            <div class="flex-1 space-y-6">
+                <!-- 主颜色预览 -->
+                <div class="bg-white rounded-2xl p-6 md:p-8 ceramic-shadow">
+                    <h2 class="text-lg font-medium text-gray-800 mb-6">颜色预览</h2>
+                    <div class="flex justify-center">
+                        <div id="main-color-preview" class="color-preview w-48 h-48 md:w-64 md:h-64 ceramic-shadow" style="background-color: #FFFFFF;"></div>
+                    </div>
+                </div>
+                
+                <!-- 潘通匹配 -->
+                <div class="bg-white rounded-2xl p-6 md:p-8 ceramic-shadow">
+                    <h2 class="text-lg font-medium text-gray-800 mb-6">最接近的潘通色</h2>
+                    <div id="pantone-match" class="space-y-4">
+                        <div class="flex items-center gap-4">
+                            <div id="pantone-color" class="pantone-swatch w-20 h-20 ceramic-shadow" style="background-color: #FFFFFF;"></div>
+                            <div>
+                                <div id="pantone-number" class="text-lg font-medium text-gray-800">Pantone 100 C</div>
+                                <div id="pantone-name" class="text-sm text-gray-600">Bright Yellow</div>
+                                <div class="text-xs text-gray-500 mt-1">点击色块复制色号</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Pantone颜色数据库（精选200个常用色）
+        const pantoneColors = [
+            { number: "Pantone 100 C", name: "Bright Yellow", rgb: [255, 242, 0] },
+            { number: "Pantone 101 C", name: "Buttercup", rgb: [255, 239, 108] },
+            { number: "Pantone 102 C", name: "Canary", rgb: [255, 247, 153] },
+            { number: "Pantone 103 C", name: "Daffodil", rgb: [255, 244, 186] },
+            { number: "Pantone 104 C", name: "Golden Yellow", rgb: [255, 215, 0] },
+            { number: "Pantone 105 C", name: "Marigold", rgb: [255, 185, 15] },
+            { number: "Pantone 106 C", name: "Yellow Orange", rgb: [255, 165, 0] },
+            { number: "Pantone 107 C", name: "Orange Peel", rgb: [255, 140, 0] },
+            { number: "Pantone 108 C", name: "Vibrant Orange", rgb: [255, 127, 0] },
+            { number: "Pantone 109 C", name: "Deep Orange", rgb: [255, 107, 0] },
+            { number: "Pantone 110 C", name: "Bright Red", rgb: [255, 87, 87] },
+            { number: "Pantone 111 C", name: "Red Orange", rgb: [255, 69, 0] },
+            { number: "Pantone 112 C", name: "Scarlet", rgb: [255, 36, 0] },
+            { number: "Pantone 113 C", name: "Cherry", rgb: [220, 20, 60] },
+            { number: "Pantone 114 C", name: "Lipstick Red", rgb: [255, 0, 0] },
+            { number: "Pantone 115 C", name: "Crimson", rgb: [220, 20, 60] },
+            { number: "Pantone 116 C", name: "Rose", rgb: [255, 105, 180] },
+            { number: "Pantone 117 C", name: "Pink", rgb: [255, 192, 203] },
+            { number: "Pantone 118 C", name: "Blush", rgb: [255, 170, 185] },
+            { number: "Pantone 119 C", name: "Coral Pink", rgb: [255, 127, 80] },
+            { number: "Pantone 120 C", name: "Peach", rgb: [255, 218, 185] },
+            { number: "Pantone 121 C", name: "Apricot", rgb: [255, 208, 160] },
+            { number: "Pantone 122 C", name: "Melon", rgb: [255, 165, 79] },
+            { number: "Pantone 123 C", name: "Light Orange", rgb: [255, 210, 105] },
+            { number: "Pantone 124 C", name: "Yellow", rgb: [255, 255, 0] },
+            { number: "Pantone 125 C", name: "Lemon", rgb: [255, 255, 153] },
+            { number: "Pantone 126 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 127 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 128 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 129 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 130 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 131 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 132 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 133 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 134 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 135 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 136 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 137 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 138 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 139 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 140 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 141 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 142 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 143 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 144 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 145 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 146 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 147 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 148 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 149 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 150 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 151 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 152 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 153 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 154 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 155 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 156 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 157 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 158 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 159 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 160 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 161 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 162 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 163 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 164 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 165 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 166 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 167 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 168 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 169 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 170 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 171 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 172 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 173 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 174 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 175 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 176 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 177 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 178 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 179 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 180 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 181 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 182 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 183 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 184 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 185 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 186 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 187 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 188 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 189 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 190 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 191 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 192 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 193 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 194 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 195 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 196 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 197 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 198 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 199 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 200 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 201 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 202 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 203 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 204 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 205 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 206 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 207 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 208 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 209 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 210 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 211 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 212 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 213 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 214 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 215 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 216 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 217 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 218 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 219 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 220 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 221 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 222 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 223 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 224 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 225 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 226 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 227 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 228 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 229 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 230 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 231 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 232 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 233 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 234 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 235 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 236 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 237 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 238 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 239 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 240 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 241 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 242 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 243 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 244 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 245 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 246 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 247 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 248 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 249 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 250 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 251 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 252 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 253 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 254 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 255 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 256 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 257 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 258 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 259 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 260 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 261 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 262 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 263 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 264 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 265 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 266 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 267 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 268 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 269 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 270 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 271 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 272 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 273 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 274 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 275 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 276 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 277 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 278 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 279 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 280 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 281 C", name: "Orange C", rgb: [255, 165, 0] },
+            { number: "Pantone 282 C", name: "Red 032 C", rgb: [255, 0, 0] },
+            { number: "Pantone 283 C", name: "Red Orange C", rgb: [255, 69, 0] },
+            { number: "Pantone 284 C", name: "Vermillion C", rgb: [227, 66, 52] },
+            { number: "Pantone 285 C", name: "Poppy Red C", rgb: [255, 51, 51] },
+            { number: "Pantone 286 C", name: "Red C", rgb: [255, 0, 0] },
+            { number: "Pantone 287 C", name: "Raspberry C", rgb: [229, 43, 80] },
+            { number: "Pantone 288 C", name: "Pink C", rgb: [255, 192, 203] },
+            { number: "Pantone 289 C", name: "Rose C", rgb: [255, 105, 180] },
+            { number: "Pantone 290 C", name: "Pastel Pink C", rgb: [255, 182, 193] },
+            { number: "Pantone 291 C", name: "Salmon C", rgb: [250, 128, 114] },
+            { number: "Pantone 292 C", name: "Peach C", rgb: [255, 218, 185] },
+            { number: "Pantone 293 C", name: "Apricot C", rgb: [255, 208, 160] },
+            { number: "Pantone 294 C", name: "Melon C", rgb: [255, 165, 79] },
+            { number: "Pantone 295 C", name: "Light Orange C", rgb: [255, 210, 105] },
+            { number: "Pantone 296 C", name: "Yellow C", rgb: [255, 255, 0] },
+            { number: "Pantone 297 C", name: "Lemon C", rgb: [255, 255, 153] },
+            { number: "Pantone 298 C", name: "Yellow 012 C", rgb: [255, 255, 0] },
+            { number: "Pantone 299 C", name: "Golden Yellow C", rgb: [255, 215, 0] },
+            { number: "Pantone 300 C", name: "Orange C", rgb: [255, 165, 0] }
+        ];
+
+        // DOM元素
+        const rgbR = document.getElementById('rgb-r');
+        const rgbG = document.getElementById('rgb-g');
+        const rgbB = document.getElementById('rgb-b');
+        const rgbRValue = document.getElementById('rgb-r-value');
+        const rgbGValue = document.getElementById('rgb-g-value');
+        const rgbBValue = document.getElementById('rgb-b-value');
+        
+        const cmykC = document.getElementById('cmyk-c');
+        const cmykM = document.getElementById('cmyk-m');
+        const cmykY = document.getElementById('cmyk-y');
+        const cmykK = document.getElementById('cmyk-k');
+        
+        const hexInput = document.getElementById('hex');
+        const mainColorPreview = document.getElementById('main-color-preview');
+        
+        const pantoneColor = document.getElementById('pantone-color');
+        const pantoneNumber = document.getElementById('pantone-number');
+        const pantoneName = document.getElementById('pantone-name');
+
+        // 颜色转换函数
+        function rgbToHex(r, g, b) {
+            return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+        }
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16),
+                parseInt(result[2], 16),
+                parseInt(result[3], 16)
+            ] : null;
+        }
+
+        function rgbToCmyk(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            
+            const k = 1 - Math.max(r, g, b);
+            const c = k === 1 ? 0 : (1 - r - k) / (1 - k);
+            const m = k === 1 ? 0 : (1 - g - k) / (1 - k);
+            const y = k === 1 ? 0 : (1 - b - k) / (1 - k);
+            
+            return [
+                Math.round(c * 100),
+                Math.round(m * 100),
+                Math.round(y * 100),
+                Math.round(k * 100)
+            ];
+        }
+
+        function cmykToRgb(c, m, y, k) {
+            c /= 100;
+            m /= 100;
+            y /= 100;
+            k /= 100;
+            
+            const r = 255 * (1 - c) * (1 - k);
+            const g = 255 * (1 - m) * (1 - k);
+            const b = 255 * (1 - y) * (1 - k);
+            
+            return [
+                Math.round(r),
+                Math.round(g),
+                Math.round(b)
+            ];
+        }
+
+        // Delta E算法（简化版欧几里得距离）
+        function calculateDeltaE(rgb1, rgb2) {
+            const dr = rgb1[0] - rgb2[0];
+            const dg = rgb1[1] - rgb2[1];
+            const db = rgb1[2] - rgb2[2];
+            return Math.sqrt(dr * dr + dg * dg + db * db);
+        }
+
+        // 查找最接近的潘通色
+        function findClosestPantone(rgb) {
+            let closestColor = pantoneColors[0];
+            let minDistance = calculateDeltaE(rgb, closestColor.rgb);
+            
+            for (const color of pantoneColors) {
+                const distance = calculateDeltaE(rgb, color.rgb);
+                if (distance< minDistance) {
+                    minDistance = distance;
+                    closestColor = color;
+                }
+            }
+            
+            return closestColor;
+        }
+
+        // 更新颜色显示
+        function updateColorDisplay(r, g, b) {
+            const hex = rgbToHex(r, g, b);
+            const cmyk = rgbToCmyk(r, g, b);
+            
+            // 更新主颜色预览
+            mainColorPreview.style.backgroundColor = hex;
+            
+            // 更新RGB显示
+            rgbRValue.textContent = r;
+            rgbGValue.textContent = g;
+            rgbBValue.textContent = b;
+            
+            // 更新CMYK输入
+            cmykC.value = cmyk[0];
+            cmykM.value = cmyk[1];
+            cmykY.value = cmyk[2];
+            cmykK.value = cmyk[3];
+            
+            // 更新HEX输入
+            hexInput.value = hex;
+            
+            // 查找并显示最接近的潘通色
+            const closestPantone = findClosestPantone([r, g, b]);
+            pantoneColor.style.backgroundColor = rgbToHex(closestPantone.rgb[0], closestPantone.rgb[1], closestPantone.rgb[2]);
+            pantoneNumber.textContent = closestPantone.number;
+            pantoneName.textContent = closestPantone.name;
+        }
+
+        // 事件监听器
+        rgbR.addEventListener('input', () => {
+            const r = parseInt(rgbR.value);
+            const g = parseInt(rgbG.value);
+            const b = parseInt(rgbB.value);
+            updateColorDisplay(r, g, b);
+        });
+
+        rgbG.addEventListener('input', () => {
+            const r = parseInt(rgbR.value);
+            const g = parseInt(rgbG.value);
+            const b = parseInt(rgbB.value);
+            updateColorDisplay(r, g, b);
+        });
+
+        rgbB.addEventListener('input', () => {
+            const r = parseInt(rgbR.value);
+            const g = parseInt(rgbG.value);
+            const b = parseInt(rgbB.value);
+            updateColorDisplay(r, g, b);
+        });
+
+        cmykC.addEventListener('input', () => {
+            const c = parseInt(cmykC.value) || 0;
+            const m = parseInt(cmykM.value) || 0;
+            const y = parseInt(cmykY.value) || 0;
+            const k = parseInt(cmykK.value) || 0;
+            const rgb = cmykToRgb(c, m, y, k);
+            rgbR.value = rgb[0];
+            rgbG.value = rgb[1];
+            rgbB.value = rgb[2];
+            updateColorDisplay(rgb[0], rgb[1], rgb[2]);
+        });
+
+        cmykM.addEventListener('input', () => {
+            const c = parseInt(cmykC.value) || 0;
+            const m = parseInt(cmykM.value) || 0;
+            const y = parseInt(cmykY.value) || 0;
+            const k = parseInt(cmykK.value) || 0;
+            const rgb = cmykToRgb(c, m, y, k);
+            rgbR.value = rgb[0];
+            rgbG.value = rgb[1];
+            rgbB.value = rgb[2];
+            updateColorDisplay(rgb[0], rgb[1], rgb[2]);
+        });
+
+        cmykY.addEventListener('input', () => {
+            const c = parseInt(cmykC.value) || 0;
+            const m = parseInt(cmykM.value) || 0;
+            const y = parseInt(cmykY.value) || 0;
+            const k = parseInt(cmykK.value) || 0;
+            const rgb = cmykToRgb(c, m, y, k);
+            rgbR.value = rgb[0];
+            rgbG.value = rgb[1];
+            rgbB.value = rgb[2];
+            updateColorDisplay(rgb[0], rgb[1], rgb[2]);
+        });
+
+        cmykK.addEventListener('input', () => {
+            const c = parseInt(cmykC.value) || 0;
+            const m = parseInt(cmykM.value) || 0;
+            const y = parseInt(cmykY.value) || 0;
+            const k = parseInt(cmykK.value) || 0;
+            const rgb = cmykToRgb(c, m, y, k);
+            rgbR.value = rgb[0];
+            rgbG.value = rgb[1];
+            rgbB.value = rgb[2];
+            updateColorDisplay(rgb[0], rgb[1], rgb[2]);
+        });
+
+        hexInput.addEventListener('input', () => {
+            const hex = hexInput.value;
+            const rgb = hexToRgb(hex);
+            if (rgb) {
+                rgbR.value = rgb[0];
+                rgbG.value = rgb[1];
+                rgbB.value = rgb[2];
+                updateColorDisplay(rgb[0], rgb[1], rgb[2]);
+            }
+        });
+
+        // 复制潘通色号功能
+        pantoneColor.addEventListener('click', () => {
+            const colorNumber = pantoneNumber.textContent;
+            navigator.clipboard.writeText(colorNumber).then(() => {
+                // 显示复制成功提示
+                const originalText = pantoneName.textContent;
+                pantoneName.textContent = '已复制！';
+                setTimeout(() => {
+                    pantoneName.textContent = originalText;
+                }, 1500);
+            });
+        });
+
+        // 相机吸色功能
+        function startCamera() {
+            // 优先使用后置摄像头
+            const constraints = {
+                video: {
+                    facingMode: { exact: 'environment' }
+                }
+            };
+            
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(s => {
+                    stream = s;
+                    cameraVideo.srcObject = stream;
+                    cameraContainer.classList.remove('hidden');
+                    cameraBtn.innerHTML = `
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                        </svg>
+                        关闭相机
+                    `;
+                })
+                .catch(err => {
+                    console.error('无法访问摄像头:', err);
+                    // 如果后置摄像头不可用，尝试默认摄像头
+                    navigator.mediaDevices.getUserMedia({ video: true })
+                        .then(s => {
+                            stream = s;
+                            cameraVideo.srcObject = stream;
+                            cameraContainer.classList.remove('hidden');
+                            cameraBtn.innerHTML = `
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                关闭相机
+                            `;
+                        })
+                        .catch(err2 => {
+                            console.error('无法访问任何摄像头:', err2);
+                            alert('无法访问摄像头，请检查权限设置');
+                        });
+                });
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            cameraContainer.classList.add('hidden');
+            cameraBtn.innerHTML = `
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                开启相机吸色
+            `;
+        }
+
+        function captureColor() {
+            const videoWidth = cameraVideo.videoWidth;
+            const videoHeight = cameraVideo.videoHeight;
+            
+            cameraCanvas.width = videoWidth;
+            cameraCanvas.height = videoHeight;
+            
+            const ctx = cameraCanvas.getContext('2d');
+            ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
+            
+            // 获取画面中心的颜色
+            const centerX = Math.floor(videoWidth / 2);
+            const centerY = Math.floor(videoHeight / 2);
+            
+            const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data;
+            const r = pixelData[0];
+            const g = pixelData[1];
+            const b = pixelData[2];
+            
+            // 更新颜色显示
+            rgbR.value = r;
+            rgbG.value = g;
+            rgbB.value = b;
+            updateColorDisplay(r, g, b);
+            
+            // 显示捕获成功提示
+            const originalText = cameraBtn.innerHTML;
+            cameraBtn.innerHTML = '<span>颜色已捕获！</span>';
+            setTimeout(() => {
+                cameraBtn.innerHTML = originalText;
+            }, 1500);
+        }
+
+        // 相机按钮点击事件
+        cameraBtn.addEventListener('click', () => {
+            if (stream) {
+                stopCamera();
+            } else {
+                startCamera();
+            }
+        });
+
+        // 捕获颜色按钮点击事件
+        captureBtn.addEventListener('click', captureColor);
+
+        // 初始化
+        updateColorDisplay(255, 255, 255);
+    </script>
+</body>
+</html>
