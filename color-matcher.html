@@ -92,6 +92,97 @@
             fill: none;
         }
         
+        .error-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #DC2626;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            z-index: 1000;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .error-toast.show {
+            opacity: 1;
+        }
+        
+        .permission-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .permission-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .permission-modal h3 {
+            margin: 0 0 12px 0;
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .permission-modal p {
+            margin: 0 0 24px 0;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .permission-modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .permission-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .permission-btn.primary {
+            background: #3B82F6;
+            color: white;
+        }
+        
+        .permission-btn.primary:hover {
+            background: #2563EB;
+        }
+        
+        .permission-btn.secondary {
+            background: #F3F4F6;
+            color: #333;
+        }
+        
+        .permission-btn.secondary:hover {
+            background: #E5E7EB;
+        }
+        
         input[type="range"] {
             -webkit-appearance: none;
             height: 4px;
@@ -224,6 +315,16 @@
                     <label class="text-xs text-gray-500 block mb-2">HEX</label>
                     <input type="text" id="hex" value="#FFFFFF" class="w-full font-mono">
                 </div>
+                
+                <!-- 重置按钮 -->
+                <div class="mt-6">
+                    <button id="reset-btn" class="camera-btn w-full">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                        </svg>
+                        重置
+                    </button>
+                </div>
             </div>
             
             <!-- 右侧：预览区域 -->
@@ -250,6 +351,21 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错误提示框 -->
+    <div id="error-toast" class="error-toast"></div>
+    
+    <!-- 权限请求弹窗 -->
+    <div id="permission-modal" class="permission-modal hidden">
+        <div class="permission-modal-content">
+            <h3>需要摄像头权限</h3>
+            <p>对色工具需要访问您的摄像头来捕获颜色。请在弹出的权限请求中选择"允许"，以便使用相机吸色功能。</p>
+            <div class="permission-modal-buttons">
+                <button id="permission-deny" class="permission-btn secondary">取消</button>
+                <button id="permission-allow" class="permission-btn primary">允许</button>
             </div>
         </div>
     </div>
@@ -479,6 +595,22 @@
         const pantoneColor = document.getElementById('pantone-color');
         const pantoneNumber = document.getElementById('pantone-number');
         const pantoneName = document.getElementById('pantone-name');
+        
+        // 相机相关元素
+        const cameraBtn = document.getElementById('camera-btn');
+        const cameraContainer = document.getElementById('camera-container');
+        const cameraVideo = document.getElementById('camera-video');
+        const cameraCanvas = document.getElementById('camera-canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const errorToast = document.getElementById('error-toast');
+        const permissionModal = document.getElementById('permission-modal');
+        const permissionAllow = document.getElementById('permission-allow');
+        const permissionDeny = document.getElementById('permission-deny');
+        
+        // 重置按钮
+        const resetBtn = document.getElementById('reset-btn');
+        
+        let stream = null;
 
         // 颜色转换函数
         function rgbToHex(r, g, b) {
@@ -676,47 +808,73 @@
             });
         });
 
+        // 显示错误提示
+        function showError(message) {
+            errorToast.textContent = message;
+            errorToast.classList.add('show');
+            setTimeout(() => {
+                errorToast.classList.remove('show');
+            }, 3000);
+        }
+
         // 相机吸色功能
         function startCamera() {
-            // 优先使用后置摄像头
-            const constraints = {
+            // 优先使用后置摄像头（exact模式）
+            const exactConstraints = {
                 video: {
                     facingMode: { exact: 'environment' }
                 }
             };
             
-            navigator.mediaDevices.getUserMedia(constraints)
+            navigator.mediaDevices.getUserMedia(exactConstraints)
                 .then(s => {
                     stream = s;
-                    cameraVideo.srcObject = stream;
-                    cameraContainer.classList.remove('hidden');
-                    cameraBtn.innerHTML = `
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                        关闭相机
-                    `;
+                    initializeCameraStream(s);
                 })
                 .catch(err => {
-                    console.error('无法访问摄像头:', err);
-                    // 如果后置摄像头不可用，尝试默认摄像头
-                    navigator.mediaDevices.getUserMedia({ video: true })
+                    console.error('无法访问后置摄像头:', err);
+                    // 如果exact模式失败，尝试普通的environment模式
+                    const fallbackConstraints = {
+                        video: {
+                            facingMode: 'environment'
+                        }
+                    };
+                    
+                    navigator.mediaDevices.getUserMedia(fallbackConstraints)
                         .then(s => {
                             stream = s;
-                            cameraVideo.srcObject = stream;
-                            cameraContainer.classList.remove('hidden');
-                            cameraBtn.innerHTML = `
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                                关闭相机
-                            `;
+                            initializeCameraStream(s);
                         })
                         .catch(err2 => {
                             console.error('无法访问任何摄像头:', err2);
-                            alert('无法访问摄像头，请检查权限设置');
+                            handleCameraError(err2);
                         });
                 });
+        }
+
+        function initializeCameraStream(s) {
+            cameraVideo.srcObject = s;
+            cameraContainer.classList.remove('hidden');
+            cameraBtn.innerHTML = `
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                关闭相机
+            `;
+        }
+
+        function handleCameraError(err) {
+            let errorMessage = '无法访问摄像头';
+            
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                errorMessage = '权限被拒绝，请在浏览器设置中允许访问摄像头';
+            } else if (err.name === 'NotFoundError') {
+                errorMessage = '未找到可用的摄像头设备';
+            } else if (err.name === 'NotReadableError') {
+                errorMessage = '摄像头被其他应用占用，请关闭其他应用后重试';
+            }
+            
+            showError(errorMessage);
         }
 
         function stopCamera() {
@@ -734,36 +892,55 @@
         }
 
         function captureColor() {
-            const videoWidth = cameraVideo.videoWidth;
-            const videoHeight = cameraVideo.videoHeight;
-            
-            cameraCanvas.width = videoWidth;
-            cameraCanvas.height = videoHeight;
-            
-            const ctx = cameraCanvas.getContext('2d');
-            ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
-            
-            // 获取画面中心的颜色
-            const centerX = Math.floor(videoWidth / 2);
-            const centerY = Math.floor(videoHeight / 2);
-            
-            const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data;
-            const r = pixelData[0];
-            const g = pixelData[1];
-            const b = pixelData[2];
-            
-            // 更新颜色显示
-            rgbR.value = r;
-            rgbG.value = g;
-            rgbB.value = b;
-            updateColorDisplay(r, g, b);
-            
-            // 显示捕获成功提示
-            const originalText = cameraBtn.innerHTML;
-            cameraBtn.innerHTML = '<span>颜色已捕获！</span>';
-            setTimeout(() => {
-                cameraBtn.innerHTML = originalText;
-            }, 1500);
+            try {
+                const videoWidth = cameraVideo.videoWidth;
+                const videoHeight = cameraVideo.videoHeight;
+                
+                if (videoWidth === 0 || videoHeight === 0) {
+                    showError('相机画面未就绪，请稍后再试');
+                    return;
+                }
+                
+                cameraCanvas.width = videoWidth;
+                cameraCanvas.height = videoHeight;
+                
+                const ctx = cameraCanvas.getContext('2d');
+                ctx.drawImage(cameraVideo, 0, 0, videoWidth, videoHeight);
+                
+                // 获取画面中心的颜色
+                const centerX = Math.floor(videoWidth / 2);
+                const centerY = Math.floor(videoHeight / 2);
+                
+                const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data;
+                const r = pixelData[0];
+                const g = pixelData[1];
+                const b = pixelData[2];
+                
+                // 更新颜色显示
+                rgbR.value = r;
+                rgbG.value = g;
+                rgbB.value = b;
+                updateColorDisplay(r, g, b);
+                
+                // 显示捕获成功提示
+                const originalText = cameraBtn.innerHTML;
+                cameraBtn.innerHTML = '<span>颜色已捕获！</span>';
+                setTimeout(() => {
+                    cameraBtn.innerHTML = originalText;
+                }, 1500);
+            } catch (err) {
+                console.error('捕获颜色失败:', err);
+                showError('捕获颜色失败，请重试');
+            }
+        }
+
+        // 权限请求处理
+        function showPermissionModal() {
+            permissionModal.classList.remove('hidden');
+        }
+
+        function hidePermissionModal() {
+            permissionModal.classList.add('hidden');
         }
 
         // 相机按钮点击事件
@@ -771,12 +948,44 @@
             if (stream) {
                 stopCamera();
             } else {
-                startCamera();
+                // 显示权限请求弹窗
+                showPermissionModal();
             }
+        });
+
+        // 权限按钮点击事件
+        permissionAllow.addEventListener('click', () => {
+            hidePermissionModal();
+            startCamera();
+        });
+
+        permissionDeny.addEventListener('click', () => {
+            hidePermissionModal();
         });
 
         // 捕获颜色按钮点击事件
         captureBtn.addEventListener('click', captureColor);
+
+        // 重置功能
+        function resetColor() {
+            // 重置为白色
+            updateColorDisplay(255, 255, 255);
+            
+            // 如果相机正在运行，关闭相机
+            if (stream) {
+                stopCamera();
+            }
+            
+            // 显示重置成功提示
+            const originalText = resetBtn.innerHTML;
+            resetBtn.innerHTML = '<span>已重置！</span>';
+            setTimeout(() => {
+                resetBtn.innerHTML = originalText;
+            }, 1500);
+        }
+
+        // 重置按钮点击事件
+        resetBtn.addEventListener('click', resetColor);
 
         // 初始化
         updateColorDisplay(255, 255, 255);
